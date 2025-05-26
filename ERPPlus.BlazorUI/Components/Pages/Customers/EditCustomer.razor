@@ -1,0 +1,92 @@
+﻿@using ERPPlus.Application.DTOs
+@using ERPPlus.BlazorUI.Services
+@using Blazored.FluentValidation
+@using Microsoft.AspNetCore.Components.Forms
+
+@page "/customers/edit/{Id:guid}"
+@inject CustomerService _customerService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+
+<div class="edit-form container shadow-sm p-4 rounded bg-white mt-4">
+    <h2 class="form-title mb-4">Editar Cliente</h2>
+
+    @if (model is null)
+    {
+        <p class="text-muted">Carregando dados do cliente...</p>
+    }
+    else
+    {
+        <EditForm Model="model" OnValidSubmit="HandleValidSubmit" FormName="customer-edit-form">
+            <FluentValidationValidator />
+
+            <div class="form-group mb-3">
+                <label for="name" class="form-label">Nome</label>
+                <InputText id="name" class="form-control custom-input" @bind-Value="model.Name" />
+                <ValidationMessage For="@(() => model.Name)" />
+            </div>
+
+            <div class="form-group mb-4">
+                <label for="email" class="form-label">E-mail</label>
+                <InputText id="email" class="form-control custom-input" @bind-Value="model.Email" />
+                <ValidationMessage For="@(() => model.Email)" />
+            </div>
+
+            <button type="submit" class="btn btn-success w-100">Salvar alterações</button>
+        </EditForm>
+
+        @if (!string.IsNullOrEmpty(message))
+        {
+            <div class="alert alert-info mt-4">@message</div>
+        }
+    }
+</div>
+
+@code {
+
+    [Parameter]
+    public Guid Id{ get; set; }
+
+    private UpdateCustomerDTO? model;
+    private string message = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var customer = await _customerService.GetByIdAsync(Id);
+            model = new UpdateCustomerDTO
+                {
+                    Id = customer.Id,
+                    Name = customer.Name,
+                    Email= customer.Email
+                };
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;    
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            var sucesso = await _customerService.UpdateAsync(model);
+            if (sucesso)
+            {
+                message = "Cliente atualizado com sucesso!";
+                NavigationManager.NavigateTo("/customers");
+            }
+            else
+            {
+                message = "Erro ao atualizar cliente.";
+            }
+        }
+        catch (Exception)
+        {
+            message = "Erro inesperado ao tentar atualizar.";
+        }
+    }
+}

@@ -1,0 +1,61 @@
+﻿@page "/"
+
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>ERPPlus - Início</PageTitle>
+
+<div class="home-container container py-5">
+    <h1 class="main-title mb-3 text-center">Bem-vindo ao ERP Plus</h1>
+    <p class="text-muted mb-5 text-center">Gerencie seus <strong>clientes</strong>, <strong>produtos</strong> e <strong>pedidos</strong> de forma simples e eficiente.</p>
+
+    <div class="row justify-content-center g-4">
+        <div class="col-md-4">
+            <div class="card card-link shadow-sm" @onclick="Customers">
+                <div class="card-body text-center">
+                    <i class="bi bi-people-fill icon-large mb-3"></i>
+                    <h5 class="card-title">Clientes</h5>
+                    <p class="card-text text-muted">Gerencie o cadastro de clientes da sua empresa.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card card-link shadow-sm" @onclick="Products">
+                <div class="card-body text-center">
+                    <i class="bi bi-box-seam icon-large mb-3"></i>
+                    <h5 class="card-title">Produtos</h5>
+                    <p class="card-text text-muted">Cadastre e edite os produtos oferecidos.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card card-link shadow-sm" @onclick="Orders">
+                <div class="card-body text-center">
+                    <i class="bi bi-cart-fill icon-large mb-3"></i>
+                    <h5 class="card-title">Pedidos</h5>
+                    <p class="card-text text-muted">Registre pedidos e acompanhe transações.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    private void Customers()
+    {
+        NavigationManager.NavigateTo("/customers");
+    }
+
+    private void Products()
+    {
+        NavigationManager.NavigateTo("/products");
+    }
+
+    private void Orders()
+    {
+        NavigationManager.NavigateTo("/orders");
+    }
+}

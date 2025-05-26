@@ -1,0 +1,57 @@
+﻿@page "/products/create"
+
+@using ERPPlus.Application.DTOs
+@using ERPPlus.BlazorUI.Services
+@using Blazored.FluentValidation
+@using Microsoft.AspNetCore.Components.Forms
+
+@inject ProductService _productService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<div class="product-form container shadow-sm p-4 rounded bg-white mt-4">
+    <h2 class="form-title mb-4">Cadastro de Produto</h2>
+
+    <EditForm Model="model" OnValidSubmit="HandleValidSubmit" FormName="product-create-form">
+        <FluentValidationValidator />
+
+        <div class="form-group mb-3">
+            <label for="name" class="form-label">Nome</label>
+            <InputText id="name" class="form-control custom-input" @bind-Value="model.Name" />
+            <ValidationMessage For="@(() => model.Name)" />
+        </div>
+
+        <div class="form-group mb-4">
+            <label for="price" class="form-label">Preço</label>
+            <InputNumber id="price" class="form-control custom-input" @bind-Value="model.Price" />
+            <ValidationMessage For="@(() => model.Price)" />
+        </div>
+
+        <button type="submit" class="btn btn-success w-100">Cadastrar Produto</button>
+    </EditForm>
+
+    @if (!string.IsNullOrEmpty(message))
+    {
+        <div class="alert alert-info mt-4">@message</div>
+    }
+</div>
+
+@code {
+    private CreateProductDTO model = new();
+    private string message = "";
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            var result = await _productService.CreateAsync(model);
+            message = $"Produto cadastrado com sucesso! ID: {result?.Id}";
+            NavigationManager.NavigateTo("/products");
+        }
+        catch (Exception ex)
+        {
+            message = $"Erro ao cadastrar: {ex.Message}";
+        }
+    }
+}
+

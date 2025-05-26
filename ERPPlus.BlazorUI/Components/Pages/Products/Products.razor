@@ -1,0 +1,101 @@
+﻿@using ERPPlus.Application.DTOs
+@using ERPPlus.BlazorUI.Services
+
+
+@page "/products"
+
+@inject ProductService _productService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <h2>Produtos</h2>
+    <button class="btn btn-success" @onclick="NovoProduto">
+        + Novo Produto
+    </button>
+</div>
+
+<!-- Tabela (desktop) -->
+<div class="table-responsive d-none d-md-block">
+    <table class="table table-striped table-hover align-middle shadow-sm rounded">
+        <thead class="table-success">
+            <tr>
+                <th>Nome</th>
+                <th>Preço</th>
+                <th class="text-center">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in products)
+            {
+                <tr>
+                    <td>@product.Name</td>
+                    <td>@product.Price.ToString("C")</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(product.Id)" title="Editar">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(product.Id)" title="Remover">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Cards (mobile) -->
+<div class="d-block d-md-none">
+    @foreach (var product in products)
+    {
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">@product.Name</h5>
+                <p class="card-text text-muted">Preço: @product.Price.ToString("C")</p>
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(product.Id)" title="Editar">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(product.Id)" title="Remover">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<ProductDTO> products = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        products = await _productService.GetAllAsync();
+    }
+
+    private void NovoProduto()
+    {
+        NavigationManager.NavigateTo("/products/create");
+    }
+
+    private void Edit(Guid id)
+    {
+        NavigationManager.NavigateTo($"/products/edit/{id}");
+    }
+
+    private async Task Delete(Guid id)
+    {
+        var confirm = await JS.InvokeAsync<bool>("confirm", "Tem certeza que deseja remover este produto?");
+        if (confirm)
+        {
+            var success = await _productService.DeleteAsync(id);
+            if (success)
+            {
+                products = await _productService.GetAllAsync();
+            }
+        }
+    }
+
+    [Inject] private IJSRuntime JS { get; set; } = default!;
+}

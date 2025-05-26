@@ -1,0 +1,90 @@
+﻿@using ERPPlus.BlazorUI.Services
+@using ERPPlus.Application.DTOs
+
+@page "/customers"
+@inject CustomerService _customerService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+
+
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <h2>Clientes</h2>
+    <button class="btn btn-success" @onclick="NovoCliente">+ Novo Cliente</button>
+</div>
+
+<div class="table-responsive d-none d-md-block">
+    <table class="table table-striped table-hover align-middle shadow-sm rounded">
+        <thead class="table-success">
+            <tr>
+                <th>Nome</th>
+                <th>Email</th>
+                <th class="text-end">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var customer in customers)
+            {
+                <tr>
+                    <td>@customer.Name</td>
+                    <td>@customer.Email</td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(customer.Id)" title="Editar">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(customer.Id)" title="Remover">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="d-block d-md-none">
+    @foreach (var customer in customers)
+    {
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">@customer.Name</h5>
+                <p class="card-text text-muted">@customer.Email</p>
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => Edit(customer.Id)" title="Editar">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(customer.Id)" title="Remover">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<CustomerResponseDTO> customers = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        customers = await _customerService.GetAllAsync();
+    }
+
+    private void NovoCliente()
+    {
+        NavigationManager.NavigateTo("/customers/create");
+    }
+
+    private void Edit(Guid id)
+    {
+        NavigationManager.NavigateTo($"/customers/edit/{id}");
+    }
+
+    private async Task Delete(Guid id)
+    {
+        var response = await _customerService.DeleteAsync(id);
+            OnInitialized();
+    
+    }
+
+}

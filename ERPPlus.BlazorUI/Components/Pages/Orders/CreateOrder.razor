@@ -1,0 +1,145 @@
+﻿@using ERPPlus.Application.DTOs
+@using ERPPlus.BlazorUI.Services
+@using Blazored.FluentValidation
+@using Microsoft.AspNetCore.Components.Forms
+
+
+@page "/orders/new"
+@inject OrderService _orderService
+@inject CustomerService _customerService
+@inject ProductService _productService
+@rendermode InteractiveServer
+
+<h3 class="text-success">Novo Pedido</h3>
+
+<EditForm Model="newOrder" OnValidSubmit="HandleValidSubmit" FormName="order-create-form">
+    <FluentValidationValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>Cliente</label>
+        <InputSelect class="form-select" @bind-Value="newOrder.CustomerId" TValue="Guid">
+            <option value="">Selecione um cliente</option>
+            @foreach (var customer in customers)
+            {
+                <option value="@customer.Id">@customer.Name</option>
+            }
+        </InputSelect>
+    </div>
+
+    <div class="mb-3 row">
+        <div class="col">
+            <label>Produto</label>
+            <InputSelect class="form-select" @bind-Value="selectedProductId" TValue="Guid">
+                <option value="">Selecione um produto</option>
+                @foreach (var product in products)
+                {
+                    <option value="@product.Id">@product.Name - R$ @product.Price</option>
+                }
+            </InputSelect>
+        </div>
+        <div class="col">
+            <label>Quantidade</label>
+            <InputNumber type="number" class="form-control" @bind-Value="selectedQuantity" min="1" TValue="int" />
+        </div>
+        <div class="col align-self-end">
+            <button class="btn btn-primary" type="button" @onclick="AddProduct">Adicionar</button>
+        </div>
+    </div>
+
+    <h5>Itens do Pedido</h5>
+    <table class="table table-sm table-striped">
+        <thead>
+            <tr>
+                <th>Produto</th>
+                <th>Quantidade</th>
+                <th>Total</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in newOrder.ProductOrders)
+            {
+                <tr>
+                    <td>@products.First(p => p.Id == item.ProductId).Name</td>
+                    <td>@item.Quantity</td>
+                    <td>R$ @(products.First(p => p.Id == item.ProductId).Price * item.Quantity)</td>
+                    <td><button class="btn btn-danger btn-sm" @onclick="@(() => RemoveProduct(item))">Remover</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="mt-3">
+        <strong>Total do Pedido: R$ @totalValue</strong>
+    </div>
+
+    <button type="submit" class="btn btn-success mt-3">Finalizar Pedido</button>
+</EditForm>
+
+@code {
+    private CreateOrderDTO newOrder = new();
+    private List<CustomerResponseDTO> customers = new();
+    private List<ProductDTO> products = new();
+
+    private Guid selectedProductId = Guid.Empty;
+    private int selectedQuantity = 1;
+    private decimal totalValue = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        customers = await _customerService.GetAllAsync();
+        products = await _productService.GetAllAsync();
+    }
+
+    private void AddProduct()
+    {
+        if (selectedProductId != Guid.Empty && selectedQuantity > 0)
+        {
+            var existing = newOrder.ProductOrders.FirstOrDefault(p => p.ProductId == selectedProductId);
+            if (existing != null)
+            {
+                existing.Quantity += selectedQuantity;
+            }
+            else
+            {
+                newOrder.ProductOrders.Add(new ProductOrderDTO
+                {
+                    ProductId = selectedProductId,
+                    Quantity = selectedQuantity
+                });
+            }
+
+            selectedProductId = Guid.Empty;
+            selectedQuantity = 1;
+            UpdateTotal();
+
+            StateHasChanged();
+        }
+    }
+
+    private void RemoveProduct(ProductOrderDTO item)
+    {
+        newOrder.ProductOrders.Remove(item);
+        UpdateTotal();
+    }
+
+    private void UpdateTotal()
+    {
+        totalValue = newOrder.ProductOrders.Sum(item =>
+        {
+            var product = products.FirstOrDefault(p => p.Id == item.ProductId);
+            return (product?.Price ?? 0) * item.Quantity;
+        });
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var result = await _orderService.CreateAsync(newOrder);
+        newOrder = new();
+        totalValue = 0;
+        await JS.InvokeVoidAsync("alert", $"Pedido criado com sucesso! ID: {result.Id}");
+    }
+
+    [Inject] private IJSRuntime JS { get; set; } = default!;
+}
