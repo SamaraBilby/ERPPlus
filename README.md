@@ -14,7 +14,7 @@ Este projeto é um sistema de gestão ERP simples, desenvolvido com tecnologias 
 - ✅ Cadastro de **clientes**
 - ✅ Cadastro de **produtos**
 - ✅ Criação de **pedidos** com múltiplos produtos e clientes
-- ✅ Listagem paginada e detalhada
+- ✅ Listagem paginada de Pedidos
 - ✅ Validações com **FluentValidation**
 - ✅ Manipulação de exceções com **middleware global**
 - ✅ API RESTful com **Swagger**
